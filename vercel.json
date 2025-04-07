@@ -1,0 +1,14 @@
+{
+    "version": 2,
+    "builds": [
+        { "src": "*.html", "use": "@vercel/static" },
+        { "src": "*.css", "use": "@vercel/static" },
+        { "src": "*.js", "use": "@vercel/static" },
+        { "src": "*.svg", "use": "@vercel/static" },
+        { "src": "server.py", "use": "@vercel/python" }
+    ],
+    "routes": [
+        { "src": "/convert", "dest": "server.py" },
+        { "src": "/(.*)", "dest": "/$1" }
+    ]
+} 

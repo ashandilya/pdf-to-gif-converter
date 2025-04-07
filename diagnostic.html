@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to GIF Converter - Diagnostic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #4a90e2;
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF to GIF Converter - Diagnostic Tool</h1>
+    
+    <div class="test-section">
+        <h2>Browser Information</h2>
+        <div id="browser-info" class="result">Loading...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Library Tests</h2>
+        <div id="library-tests" class="result">Loading...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>File System Test</h2>
+        <div id="file-system-test" class="result">Loading...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>CORS Test</h2>
+        <div id="cors-test" class="result">Loading...</div>
+        <button id="run-cors-test">Run CORS Test</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>PDF.js Test</h2>
+        <div id="pdfjs-test" class="result">Loading...</div>
+        <button id="run-pdfjs-test">Run PDF.js Test</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>GIF.js Test</h2>
+        <div id="gifjs-test" class="result">Loading...</div>
+        <button id="run-gifjs-test">Run GIF.js Test</button>
+    </div>
+    
+    <script>
+        // Browser Information
+        document.getElementById('browser-info').innerHTML = `
+            <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
+            <p><strong>Browser:</strong> ${navigator.appName}</p>
+            <p><strong>Version:</strong> ${navigator.appVersion}</p>
+            <p><strong>Platform:</strong> ${navigator.platform}</p>
+            <p><strong>Cookies Enabled:</strong> ${navigator.cookieEnabled ? 'Yes' : 'No'}</p>
+            <p><strong>JavaScript Enabled:</strong> Yes</p>
+        `;
+        
+        // Library Tests
+        const libraryTests = document.getElementById('library-tests');
+        libraryTests.innerHTML = '';
+        
+        // Check if PDF.js is loaded
+        try {
+            if (typeof pdfjsLib !== 'undefined') {
+                libraryTests.innerHTML += '<p class="success">✓ PDF.js is loaded</p>';
+            } else {
+                libraryTests.innerHTML += '<p class="error">✗ PDF.js is not loaded</p>';
+            }
+        } catch (e) {
+            libraryTests.innerHTML += `<p class="error">✗ PDF.js error: ${e.message}</p>`;
+        }
+        
+        // Check if GIF.js is loaded
+        try {
+            if (typeof GIF !== 'undefined') {
+                libraryTests.innerHTML += '<p class="success">✓ GIF.js is loaded</p>';
+            } else {
+                libraryTests.innerHTML += '<p class="error">✗ GIF.js is not loaded</p>';
+            }
+        } catch (e) {
+            libraryTests.innerHTML += `<p class="error">✗ GIF.js error: ${e.message}</p>`;
+        }
+        
+        // File System Test
+        const fileSystemTest = document.getElementById('file-system-test');
+        fileSystemTest.innerHTML = '';
+        
+        // Check if we can access the file system
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'index.html', false);
+            xhr.send();
+            if (xhr.status === 200) {
+                fileSystemTest.innerHTML += '<p class="success">✓ Can access index.html</p>';
+            } else {
+                fileSystemTest.innerHTML += `<p class="error">✗ Cannot access index.html (Status: ${xhr.status})</p>`;
+            }
+        } catch (e) {
+            fileSystemTest.innerHTML += `<p class="error">✗ File system error: ${e.message}</p>`;
+        }
+        
+        // CORS Test
+        document.getElementById('run-cors-test').addEventListener('click', function() {
+            const corsTest = document.getElementById('cors-test');
+            corsTest.innerHTML = '<p>Testing CORS...</p>';
+            
+            // Try to load a resource from a different origin
+            fetch('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js')
+                .then(response => {
+                    if (response.ok) {
+                        corsTest.innerHTML = '<p class="success">✓ CORS is working (can access CDN)</p>';
+                    } else {
+                        corsTest.innerHTML = `<p class="error">✗ CORS error: ${response.status} ${response.statusText}</p>`;
+                    }
+                })
+                .catch(error => {
+                    corsTest.innerHTML = `<p class="error">✗ CORS error: ${error.message}</p>`;
+                });
+        });
+        
+        // PDF.js Test
+        document.getElementById('run-pdfjs-test').addEventListener('click', function() {
+            const pdfjsTest = document.getElementById('pdfjs-test');
+            pdfjsTest.innerHTML = '<p>Testing PDF.js...</p>';
+            
+            try {
+                if (typeof pdfjsLib === 'undefined') {
+                    pdfjsTest.innerHTML = '<p class="error">✗ PDF.js is not loaded</p>';
+                    return;
+                }
+                
+                // Create a simple PDF document
+                const pdfData = new Uint8Array([
+                    0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34, 0x0A, 0x31, 0x20, 0x30, 0x20, 0x6F, 0x62, 0x6A,
+                    0x0A, 0x3C, 0x3C, 0x2F, 0x54, 0x79, 0x70, 0x65, 0x2F, 0x43, 0x61, 0x74, 0x61, 0x6C, 0x6F, 0x67,
+                    0x2F, 0x50, 0x61, 0x67, 0x65, 0x73, 0x20, 0x32, 0x20, 0x30, 0x20, 0x52, 0x3E, 0x3E, 0x0A, 0x65,
+                    0x6E, 0x64, 0x6F, 0x62, 0x6A, 0x0A, 0x0A, 0x32, 0x20, 0x30, 0x20, 0x6F, 0x62, 0x6A, 0x0A, 0x3C,
+                    0x3C, 0x2F, 0x54, 0x79, 0x70, 0x65, 0x2F, 0x50, 0x61, 0x67, 0x65, 0x73, 0x2F, 0x43, 0x6F, 0x75,
+                    0x6E, 0x74, 0x20, 0x31, 0x2F, 0x4B, 0x69, 0x64, 0x73, 0x5B, 0x33, 0x20, 0x30, 0x20, 0x52, 0x5D,
+                    0x3E, 0x3E, 0x0A, 0x65, 0x6E, 0x64, 0x6F, 0x62, 0x6A, 0x0A, 0x0A, 0x33, 0x20, 0x30, 0x20, 0x6F,
+                    0x62, 0x6A, 0x0A, 0x3C, 0x3C, 0x2F, 0x54, 0x79, 0x70, 0x65, 0x2F, 0x50, 0x61, 0x67, 0x65, 0x2F,
+                    0x52, 0x65, 0x73, 0x6F, 0x75, 0x72, 0x63, 0x65, 0x73, 0x3E, 0x3E, 0x0A, 0x65, 0x6E, 0x64, 0x6F,
+                    0x62, 0x6A, 0x0A, 0x0A, 0x78, 0x72, 0x65, 0x66, 0x0A, 0x30, 0x20, 0x34, 0x0A, 0x30, 0x30, 0x30,
+                    0x30, 0x30, 0x30, 0x30, 0x30, 0x20, 0x36, 0x35, 0x35, 0x33, 0x35, 0x20, 0x66, 0x20, 0x0A, 0x30,
+                    0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x20, 0x30, 0x30, 0x30, 0x30, 0x30, 0x20, 0x6E, 0x20,
+                    0x0A, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x20, 0x30, 0x30, 0x30, 0x30, 0x30, 0x20,
+                    0x6E, 0x20, 0x0A, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x20, 0x30, 0x30, 0x30, 0x30,
+                    0x30, 0x20, 0x6E, 0x20, 0x0A, 0x74, 0x72, 0x61, 0x69, 0x6C, 0x65, 0x72, 0x0A, 0x3C, 0x3C, 0x2F,
+                    0x53, 0x69, 0x7A, 0x65, 0x20, 0x34, 0x2F, 0x52, 0x6F, 0x6F, 0x74, 0x20, 0x31, 0x20, 0x30, 0x20,
+                    0x52, 0x2F, 0x49, 0x6E, 0x66, 0x6F, 0x20, 0x34, 0x20, 0x30, 0x20, 0x52, 0x3E, 0x3E, 0x0A, 0x73,
+                    0x74, 0x61, 0x72, 0x74, 0x78, 0x72, 0x65, 0x66, 0x0A, 0x31, 0x37, 0x35, 0x0A, 0x25, 0x25, 0x45,
+                    0x4F, 0x46
+                ]);
+                
+                pdfjsLib.getDocument(pdfData).promise.then(function(pdf) {
+                    pdfjsTest.innerHTML = '<p class="success">✓ PDF.js is working correctly</p>';
+                }).catch(function(error) {
+                    pdfjsTest.innerHTML = `<p class="error">✗ PDF.js error: ${error.message}</p>`;
+                });
+            } catch (error) {
+                pdfjsTest.innerHTML = `<p class="error">✗ PDF.js error: ${error.message}</p>`;
+            }
+        });
+        
+        // GIF.js Test
+        document.getElementById('run-gifjs-test').addEventListener('click', function() {
+            const gifjsTest = document.getElementById('gifjs-test');
+            gifjsTest.innerHTML = '<p>Testing GIF.js...</p>';
+            
+            try {
+                if (typeof GIF === 'undefined') {
+                    gifjsTest.innerHTML = '<p class="error">✗ GIF.js is not loaded</p>';
+                    return;
+                }
+                
+                // Create a simple GIF
+                const gif = new GIF({
+                    workers: 1,
+                    quality: 10,
+                    width: 10,
+                    height: 10
+                });
+                
+                // Create a simple canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = 10;
+                canvas.height = 10;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'red';
+                ctx.fillRect(0, 0, 10, 10);
+                
+                // Add the canvas as a frame
+                gif.addFrame(canvas);
+                
+                // Render the GIF
+                gif.on('finished', function(blob) {
+                    gifjsTest.innerHTML = '<p class="success">✓ GIF.js is working correctly</p>';
+                });
+                
+                gif.render();
+            } catch (error) {
+                gifjsTest.innerHTML = `<p class="error">✗ GIF.js error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html> 

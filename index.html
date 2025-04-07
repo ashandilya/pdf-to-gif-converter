@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to GIF Converter</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Load PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Initialize PDF.js
+        window.pdfjsLib = window.pdfjsLib || {};
+        window.pdfjsLib.GlobalWorkerOptions = window.pdfjsLib.GlobalWorkerOptions || {};
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <style>
+        /* Diagnostic overlay styles */
+        #diagnostic-overlay {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 300px;
+            max-height: 200px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-y: auto;
+            z-index: 9999;
+            display: none;
+        }
+        #diagnostic-toggle {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            z-index: 10000;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 5px;
+        }
+        .error {
+            color: #ff6b6b;
+        }
+        .success {
+            color: #51cf66;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PDF to GIF Converter</h1>
+            <p>Convert your PDF documents into animated GIFs easily</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <div class="upload-box" id="dropZone">
+                    <img src="upload-icon.svg" alt="Upload" class="upload-icon">
+                    <p>Drag & Drop your PDF here</p>
+                    <p>or</p>
+                    <label for="fileInput" class="upload-button">Choose File</label>
+                    <input type="file" id="fileInput" accept=".pdf" hidden>
+                </div>
+                <div id="loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Processing... Please wait</p>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>Conversion Settings</h2>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label for="frameRate">Frame Rate (fps):</label>
+                        <input type="number" id="frameRate" value="1" min="1" max="30">
+                    </div>
+                    <div class="setting-item">
+                        <label for="quality">Quality:</label>
+                        <select id="quality">
+                            <option value="high">High</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <h2>Preview</h2>
+                <div class="preview-container">
+                    <div id="pdfPreview" class="preview-box">
+                        <p class="preview-placeholder">PDF Preview</p>
+                    </div>
+                    <div id="gifPreview" class="preview-box">
+                        <p class="preview-placeholder">GIF Preview</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-section">
+                <button id="convertBtn" class="convert-button" disabled>Convert to GIF</button>
+                <button id="downloadBtn" class="download-button" disabled>Download GIF</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>Made with ❤️ | PDF to GIF Converter</p>
+        </footer>
+    </div>
+    
+    <!-- Diagnostic overlay -->
+    <button id="diagnostic-toggle">Show Logs</button>
+    <div id="diagnostic-overlay"></div>
+    
+    <!-- Load script at the end to ensure DOM is ready -->
+    <script src="script.js"></script>
+    <script>
+        // Diagnostic overlay functionality
+        const diagnosticOverlay = document.getElementById('diagnostic-overlay');
+        const diagnosticToggle = document.getElementById('diagnostic-toggle');
+        let isDiagnosticVisible = false;
+        
+        // Override console methods to show logs in the overlay
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        console.log = function() {
+            const args = Array.from(arguments);
+            originalConsoleLog.apply(console, args);
+            addLogEntry(args.join(' '), 'log');
+        };
+        
+        console.error = function() {
+            const args = Array.from(arguments);
+            originalConsoleError.apply(console, args);
+            addLogEntry(args.join(' '), 'error');
+        };
+        
+        console.warn = function() {
+            const args = Array.from(arguments);
+            originalConsoleWarn.apply(console, args);
+            addLogEntry(args.join(' '), 'warn');
+        };
+        
+        function addLogEntry(message, type) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            diagnosticOverlay.appendChild(entry);
+            diagnosticOverlay.scrollTop = diagnosticOverlay.scrollHeight;
+        }
+        
+        diagnosticToggle.addEventListener('click', function() {
+            isDiagnosticVisible = !isDiagnosticVisible;
+            diagnosticOverlay.style.display = isDiagnosticVisible ? 'block' : 'none';
+            diagnosticToggle.textContent = isDiagnosticVisible ? 'Hide Logs' : 'Show Logs';
+        });
+        
+        // Add initial log entry
+        addLogEntry('Diagnostic overlay initialized', 'log');
+        addLogEntry('PDF.js version: ' + (typeof pdfjsLib !== 'undefined' ? pdfjsLib.version : 'Not loaded'), 'log');
+    </script>
+</body>
+</html> 
