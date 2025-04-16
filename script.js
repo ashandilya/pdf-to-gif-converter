@@ -131,6 +131,8 @@ async function convertToGif() {
             reader.readAsDataURL(currentPdfFile);
         });
 
+        console.log('Sending request to:', `${config.apiUrl}/convert`);
+        
         // Send as JSON
         const response = await fetch(`${config.apiUrl}/convert`, {
             method: 'POST',
@@ -145,8 +147,9 @@ async function convertToGif() {
         });
         
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Server error: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('Server response:', errorText);
+            throw new Error(`Server error: ${response.status} - ${errorText}`);
         }
         
         const result = await response.json();
