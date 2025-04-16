@@ -71,10 +71,21 @@ def convert_pdf_to_gif(pdf_data, frame_rate=1, quality='medium'):
     except Exception as e:
         raise Exception(f"Error converting PDF to GIF: {str(e)}")
 
-def handle_request(event):
+def handler(request):
+    if request.get('method', '').upper() == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
+            'body': ''
+        }
+
     try:
         # Parse the request body
-        body = json.loads(event.get('body', '{}'))
+        body = json.loads(request.get('body', '{}'))
         
         # Get parameters
         pdf_data = body.get('pdfData')
@@ -84,6 +95,10 @@ def handle_request(event):
         if not pdf_data:
             return {
                 'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
                 'body': json.dumps({
                     'success': False,
                     'error': 'No PDF data provided'
@@ -122,17 +137,4 @@ def handle_request(event):
                 'error': str(e),
                 'traceback': traceback_str
             })
-        }
-
-def handler(event, context):
-    if event.get('httpMethod') == 'OPTIONS':
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type'
-            }
-        }
-    
-    return handle_request(event) 
+        } 

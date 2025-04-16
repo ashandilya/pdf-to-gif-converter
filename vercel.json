@@ -8,7 +8,9 @@
         { "src": "server.py", "use": "@vercel/python" }
     ],
     "routes": [
-        { "src": "/convert", "dest": "server.py" },
-        { "src": "/(.*)", "dest": "/$1" }
-    ]
+        { "src": "/(.*)", "dest": "server.py" }
+    ],
+    "env": {
+        "PYTHONPATH": "."
+    }
 } 
