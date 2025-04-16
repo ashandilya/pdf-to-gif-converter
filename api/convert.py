@@ -6,6 +6,8 @@ import io
 import traceback
 import os
 from tempfile import NamedTemporaryFile
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qs
 
 def convert_pdf_to_gif(pdf_data, frame_rate=1, quality='medium'):
     try:
@@ -73,7 +75,7 @@ def convert_pdf_to_gif(pdf_data, frame_rate=1, quality='medium'):
     except Exception as e:
         raise Exception(f"Error converting PDF to GIF: {str(e)}")
 
-def handler(request):
+def handle_request(request):
     """Vercel serverless function handler"""
     # Add CORS headers for all responses
     headers = {
@@ -144,4 +146,8 @@ def handler(request):
             'success': False,
             'error': 'Method not allowed'
         })
-    } 
+    }
+
+# Vercel requires a function named 'handler'
+def handler(request):
+    return handle_request(request) 
