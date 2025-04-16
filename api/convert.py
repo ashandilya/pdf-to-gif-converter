@@ -24,11 +24,12 @@ def convert_pdf_to_gif(pdf_data, frame_rate=1, quality='medium'):
         max_size, dpi = quality_settings.get(quality, quality_settings['medium'])
         
         # Create a temporary file for the PDF
-        with NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_pdf:
-            tmp_pdf.write(pdf_bytes)
-            tmp_pdf_path = tmp_pdf.name
-        
+        tmp_pdf_path = None
         try:
+            with NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_pdf:
+                tmp_pdf.write(pdf_bytes)
+                tmp_pdf_path = tmp_pdf.name
+
             # Open the PDF
             pdf_document = fitz.open(tmp_pdf_path)
             if pdf_document.page_count == 0:
@@ -38,7 +39,7 @@ def convert_pdf_to_gif(pdf_data, frame_rate=1, quality='medium'):
             images = []
             for page_num in range(pdf_document.page_count):
                 page = pdf_document[page_num]
-                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))  # Reduced scale
                 img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
                 
                 # Resize if needed
@@ -48,11 +49,12 @@ def convert_pdf_to_gif(pdf_data, frame_rate=1, quality='medium'):
                     img = img.resize(new_size, Image.Resampling.LANCZOS)
                 
                 images.append(img)
+                del pix  # Free up memory
                 
-            # Save as GIF
+            # Save as GIF with optimization
             output = io.BytesIO()
             if images:
-                duration = int(1000 / frame_rate)  # Convert fps to milliseconds
+                duration = int(1000 / frame_rate)
                 images[0].save(
                     output,
                     format='GIF',
@@ -60,8 +62,14 @@ def convert_pdf_to_gif(pdf_data, frame_rate=1, quality='medium'):
                     save_all=True,
                     duration=duration,
                     loop=0,
-                    optimize=True
+                    optimize=True,
+                    quality=quality_settings[quality][1]  # Use DPI as quality
                 )
+            
+            # Clean up images to free memory
+            for img in images:
+                img.close()
+            images.clear()
             
             # Return base64 encoded GIF
             return base64.b64encode(output.getvalue()).decode('utf-8')
@@ -69,8 +77,11 @@ def convert_pdf_to_gif(pdf_data, frame_rate=1, quality='medium'):
             # Clean up
             if 'pdf_document' in locals():
                 pdf_document.close()
-            if os.path.exists(tmp_pdf_path):
-                os.unlink(tmp_pdf_path)
+            if tmp_pdf_path and os.path.exists(tmp_pdf_path):
+                try:
+                    os.unlink(tmp_pdf_path)
+                except:
+                    pass
             
     except Exception as e:
         raise Exception(f"Error converting PDF to GIF: {str(e)}")

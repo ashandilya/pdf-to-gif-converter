@@ -5,7 +5,14 @@
         { "src": "*.css", "use": "@vercel/static" },
         { "src": "*.js", "use": "@vercel/static" },
         { "src": "*.svg", "use": "@vercel/static" },
-        { "src": "api/convert.py", "use": "@vercel/python" }
+        { 
+            "src": "api/convert.py",
+            "use": "@vercel/python",
+            "config": {
+                "maxLambdaSize": "15mb",
+                "runtime": "python3.9"
+            }
+        }
     ],
     "routes": [
         {
@@ -19,6 +26,8 @@
         }
     ],
     "env": {
-        "PYTHONPATH": "."
+        "PYTHONPATH": ".",
+        "PIP_NO_DEPS": "1",
+        "PIP_NO_CACHE_DIR": "1"
     }
 } 
