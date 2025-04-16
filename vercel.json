@@ -5,12 +5,12 @@
         { "src": "*.css", "use": "@vercel/static" },
         { "src": "*.js", "use": "@vercel/static" },
         { "src": "*.svg", "use": "@vercel/static" },
-        { "src": "api/*.py", "use": "@vercel/python" }
+        { "src": "api/convert.py", "use": "@vercel/python" }
     ],
     "routes": [
         {
-            "src": "/api/(.*)",
-            "dest": "/api/$1"
+            "src": "/api/convert",
+            "dest": "/api/convert"
         },
         {
             "src": "/(.*)",
