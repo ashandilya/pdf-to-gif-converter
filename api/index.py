@@ -7,6 +7,8 @@ import io
 import traceback
 import os
 from tempfile import NamedTemporaryFile
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qs
 
 def convert_pdf_to_gif(pdf_data, frame_rate=1, quality='medium'):
     try:
@@ -74,9 +76,64 @@ def convert_pdf_to_gif(pdf_data, frame_rate=1, quality='medium'):
     except Exception as e:
         raise Exception(f"Error converting PDF to GIF: {str(e)}")
 
-def handler(request):
-    # Handle CORS preflight request
-    if request.get('method', '').upper() == 'OPTIONS':
+class Handler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Max-Age', '86400')
+        self.end_headers()
+
+    def do_POST(self):
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            request_body = self.rfile.read(content_length)
+            body = json.loads(request_body.decode('utf-8'))
+            
+            # Get parameters
+            pdf_data = body.get('pdfData')
+            frame_rate = int(body.get('frameRate', 1))
+            quality = body.get('quality', 'medium')
+            
+            if not pdf_data:
+                self.send_error_response(400, 'No PDF data provided')
+                return
+            
+            # Convert PDF to GIF
+            gif_base64 = convert_pdf_to_gif(pdf_data, frame_rate, quality)
+            
+            # Send success response
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response_data = {
+                'success': True,
+                'gif': gif_base64
+            }
+            self.wfile.write(json.dumps(response_data).encode('utf-8'))
+            
+        except Exception as e:
+            self.send_error_response(500, str(e))
+    
+    def send_error_response(self, status_code, error_message):
+        self.send_response(status_code)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        
+        error_data = {
+            'success': False,
+            'error': error_message,
+            'traceback': traceback.format_exc()
+        }
+        self.wfile.write(json.dumps(error_data).encode('utf-8'))
+
+def handler(request, context):
+    """Vercel serverless function handler"""
+    if request['method'] == 'OPTIONS':
         return {
             'statusCode': 200,
             'headers': {
@@ -87,9 +144,8 @@ def handler(request):
             },
             'body': ''
         }
-
-    # Handle POST request
-    if request.get('method', '').upper() == 'POST':
+    
+    if request['method'] == 'POST':
         try:
             # Parse the request body
             body = json.loads(request.get('body', '{}'))
@@ -146,7 +202,6 @@ def handler(request):
                 })
             }
     
-    # Handle unsupported methods
     return {
         'statusCode': 405,
         'headers': {

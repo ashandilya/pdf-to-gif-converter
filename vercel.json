@@ -5,11 +5,17 @@
         { "src": "*.css", "use": "@vercel/static" },
         { "src": "*.js", "use": "@vercel/static" },
         { "src": "*.svg", "use": "@vercel/static" },
-        { "src": "api/index.py", "use": "@vercel/python" }
+        { "src": "api/*.py", "use": "@vercel/python" }
     ],
     "routes": [
-        { "src": "/api/convert", "dest": "api/index.py" },
-        { "src": "/(.*)", "dest": "/$1" }
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/$1"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/$1"
+        }
     ],
     "env": {
         "PYTHONPATH": "."
