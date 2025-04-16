@@ -1,6 +1,6 @@
 const config = {
-    apiUrl: process.env.NODE_ENV === 'production' 
-        ? 'https://your-app-name.vercel.app/api'  // Replace with your Vercel deployment URL
+    apiUrl: window.location.hostname.includes('vercel.app') || window.location.hostname.includes('localhost')
+        ? `${window.location.protocol}//${window.location.hostname}/api`
         : 'http://localhost:8000'
 };
 
